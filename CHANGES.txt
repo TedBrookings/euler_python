@@ -1,0 +1,5 @@
+Created .git repository for project
+  -Current problems are 001 - 038, and 067
+  -Current helper moduels are: digit_math, fibonacci, number_words,
+     permutation, primes, pythagorean
+  -euler.py calls all the problems in order, lists output, and times them

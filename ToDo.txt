@@ -1,0 +1,11 @@
+Add unit tests for the helper files:
+  digit_math.py
+  fibonacci.py
+  number_words.py
+  permutation.py
+  primes.py
+  pythagorean.py
+
+Move on to problem 039
+
+In the future, always unit tests first
