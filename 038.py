@@ -2,6 +2,10 @@
 
 
 from digit_math import genDigits, digitsToInt, digitsToStr
+import sys
+if sys.version_info[0] == 2:
+  # get rid of 2.x range that produced list instead of iterator
+  range = xrange
 
 
 def genConcatenatedPandigitalProducts(base, maxDigit):
@@ -10,14 +14,11 @@ def genConcatenatedPandigitalProducts(base, maxDigit):
   #   pandigital string (in correct base),
   #   starting number string (in correct base),
   #   n, the max concatenated product integer
-  maxPandigital = range(maxDigit, 0, -1)
+  maxPandigital = list(range(maxDigit, 0, -1))
   maxStartDigits = maxDigit / 2
   maxStartVal = digitsToInt(range(maxDigit, maxDigit - maxStartDigits, -1),
                             base)
-  # for some reason, the for loop causes system to lock up
-  #for startVal in range(1, maxStartVal):
-  startVal = 1
-  while startVal <= maxStartVal:
+  for startVal in range(1, maxStartVal):
     digits = list(genDigits(startVal, base, leastFirst=False))
     for n in range(2, maxDigit + 1):
       digits += list(genDigits(startVal * n, base, leastFirst=False))
@@ -28,8 +29,6 @@ def genConcatenatedPandigitalProducts(base, maxDigit):
         yield pandigitalValue, pandigitalStr, startValStr, n
       elif len(digits) >= maxDigit:
         break
-    startVal += 1
-
 
 
 def euler38(base=10, maxDigit=None):
@@ -46,6 +45,5 @@ def euler38(base=10, maxDigit=None):
 
 
 if __name__ == '__main__':
-  import sys
   args = (eval(a) for a in sys.argv[1:])
   euler38(*args)
