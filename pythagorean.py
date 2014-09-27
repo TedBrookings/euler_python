@@ -5,6 +5,7 @@ import sys
 if sys.version_info[0] == 2:
   # get rid of 2.x range that produced list instead of iterator
   range = xrange
+from math import sqrt
 
 
 def isPythagorean(a, b, c):
@@ -20,11 +21,8 @@ def genPythagorean(maxC=float('inf'), maxB=None, primitive=False):
   computeDerived = not primitive
   
   m, n = 2, 1
-  # add primitive seed (3,4,5)
+  # add primitive seed for (3,4,5)
   seeds = [(2,1)]
-  if computeDerived:
-    # add derived seed
-    seeds.append((3,4,5, 2))
   while seeds:
     tup = seeds.pop(0)
     if len(tup) == 2:
@@ -79,6 +77,48 @@ def genPythagoreanSlow(maxC=float('inf'), maxB=None, primitive=False):
         yield a,b,c
     c += 1
 
+
+def genPythagoreanWithPerimeter(perimeter, primitive=False):
+  # generate all Pythagorean triples, such that c <= maxC, b <= maxB
+  #   if primitive=True, then only generates triples with no common factors
+  computeDerived = not primitive
+  
+  maxN = int(round(sqrt(perimeter / 4)))
+  perimStop = perimeter / 2
+  
+  m, n = 2, 1
+  # add primitive seed for (3,4,5)
+  seeds = [(2,1)]
+  while seeds:
+    tup = seeds.pop(0)
+    # this m,n tuple describes a primitive pythagorean triple
+    m,n = tup
+    mSqrd, nSqrd = m*m, n*n
+    a, b, c = mSqrd-nSqrd, 2*m*n, mSqrd + nSqrd
+    if a > b:
+      a, b = b, a
+    p = a + b + c
+    
+    if p >= perimeter:
+      if p == perimeter:
+        # found a match, yield it
+        yield a, b, c
+      # this tree is too big, will never have matching descendents
+      continue
+    
+    if computeDerived:
+      # Not a match, but maybe a multiplicative factor will match
+      f, r = divmod(perimeter, p)
+      if r == 0:
+        # f * (a,b,c) is a match
+        yield (f * a, f * b, f * c)
+      
+    # add three new primitive seeds
+    if m <= maxN:
+      seeds.append((2*m - n, m))
+      seeds.append((2*m + n, m))
+    seeds.append((m + 2*n, n))
+
   
 def testAssert(booleanVal, message):
   # print Assertion message with line info on fail
@@ -94,40 +134,80 @@ def testAssert(booleanVal, message):
 
 
 def testPythagorean(maxC=1000):
-  # Test if genPythagorean, genPythagoreanSlow, and isPythagorean work by
-  #   comparing their results
+  ### Test if genPythagorean, genPythagoreanSlow, and isPythagorean work by
+  ###   comparing their results
   sys.stdout.write('Testing pythagorean.py...')
   # generate a list of Pythagorean triples with c < maxC, sorted by maximum
   # value of C
-  generatedTrips = sorted(genPythagorean(maxC=maxC), key=lambda t:t[2])
+  generatedTrips = sorted(genPythagorean(maxC=maxC), key=lambda t:t[2]-1.0/t[1])
   for trip in generatedTrips:
     # assert each generated triple is valid
     testAssert( isPythagorean(*trip),
                 'genPythagorean generated ' + str(trip) +
                 ' which is not a pythagorean triplet'
               )
+  testAssert( len(set(generatedTrips)) == len(generatedTrips),
+              'genPythagorean generated duplicate triplets'
+            )
   
-  ## now do it the slow way, to test if they're the same
-  slowTrips = sorted(genPythagoreanSlow(maxC=maxC), key=lambda t:t[2])
+  # now do it the slow way, to test if they're the same
+  slowTrips = sorted(genPythagoreanSlow(maxC=maxC), key=lambda t:t[2]-1.0/t[1])
+  testAssert( len(set(slowTrips)) == len(slowTrips),
+              'genPythagoreanSlow generated duplicate triplets'
+            )
+
   try:
     assert slowTrips == generatedTrips
   except AssertionError:
     for trip in slowTrips:
-        # assert each triple was generated already by the fast way
-        #  (i.e. fast was was comprehensive)
-        testAssert( trip in generatedTrips,
-                    'genPythagorean failed to generate ' + str(trip) +
-                    ' which is a pythagorean triplet'
-                  )
-    for trip in generatedTrips:
-      # assert that the slow way was comprehensive too
-      testAssert( trip in slowTrips,
-                  'Slow (testing) method failed to generate ' + str(trip) +
-                  ' which is a valid pythagorean triplet'
+      # assert each generated triple is valid
+      testAssert( isPythagorean(*trip),
+                  'genPythagoreanSlow generated ' + str(trip) +
+                  ' which is not a pythagorean triplet'
                 )
+      # assert each triple was generated already by the fast way
+      #  (i.e. fast was was comprehensive)
+      testAssert( trip in generatedTrips,
+                  'genPythagorean failed to generate ' + str(trip) +
+                  ' which is a pythagorean triplet'
+                )
+    for trip in generatedTrips:
+      # assert each generated triple is valid
+      testAssert( trip in slowTrips,
+                  'genPythagoreanSlow failed to generate ' + str(trip) +
+                  ' which is a pythagorean triplet'
+                )
+    raise
 
+  # test fix perimeter generation
+  for p in range(12, maxC):
+    fixedTrips = sorted(genPythagoreanWithPerimeter(p),
+                        key=lambda t:t[2]-1.0/t[1])
+    testAssert( len(set(fixedTrips)) == len(fixedTrips),
+               'genPythagoreanWithPerimeter generated duplicate triplets'
+            )
+    genTrips = sorted((t for t in generatedTrips if sum(t) == p),
+                      key=lambda t:t[2]-1.0/t[1])
+    try:
+      assert fixedTrips == genTrips
+    except AssertionError:
+      for trip in fixedTrips:
+        # assert each generated triple is valid
+        testAssert( isPythagorean(*trip),
+                    'genPythagoreanWithPerimeter generated ' + str(trip) +
+                    ' which is not a pythagorean triplet'
+                  )
+      for trip in genTrips:
+        # assert fixed-perimeter triple was comprehensive
+        testAssert( trip in fixedTrips,
+                    'genPythagoreanWithPerimeter failed to generate '
+                    + str(trip) + ' with perimeter %d' % p
+                  )
+      raise
+    
   print(' passed')
 
 
 if __name__ == "__main__":
-  testPythagorean()
+  args = tuple(eval(a) for a in sys.argv[1:])
+  testPythagorean(*args)
