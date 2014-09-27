@@ -284,7 +284,6 @@ def genUniqueDigitNums(base=10, exclude0=False,
       
     # increment digits, allowing digits to be disordered
     j = lastInd ; i = j - 1
-    print(j,i, lastInd, digits)
     while digits[j] == maxDigit:
       # current digit has reached its maximum
       if i == 0:
@@ -308,7 +307,6 @@ def genUniqueDigitNums(base=10, exclude0=False,
         # change next more significant digit
         digits[j] = firstNum + lastInd - j
         j = i ; i -= 1
-        print(j, i, lastInd, digits)
     if j is not None:
       # increment current digit
       digits[j] += 1
@@ -327,8 +325,6 @@ def genUniqueDigitNums(base=10, exclude0=False,
                                   )
                             )
         digits[j+1:] = allowDigits[:lastInd - j]
-          
-      print('*', digits, j, okToYield)
 
 
 def genDigitFuncSums(func, base=10, display=False):
