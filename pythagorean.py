@@ -6,7 +6,6 @@ if sys.version_info[0] == 2:
   # get rid of 2.x range that produced list instead of iterator
   range = xrange
 from math import sqrt, ceil
-#from blist import sortedlist
 from collections import deque
 
 def isPythagorean(a, b, c):

@@ -26,7 +26,7 @@ def genDigits(num, base=10, leastFirst=True):
       num, d = divmod(num, base)
       yield d
   else:
-    startPow = int(log(num, base))
+    startPow = int(ceil(log(num+1, base)))-1
     divTest = base**startPow
     d, num = divmod(num, divTest)
     yield d
