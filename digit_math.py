@@ -11,7 +11,7 @@ def getDigit(num, n, base=10):
 
 def getNumDigits(num, base=10):
   # return the number of significant digits of num
-  return int(ceil(log(num, base)))
+  return int(ceil(log(num+1, base)))
 
 
 def genDigits(num, base=10, leastFirst=True):
@@ -26,10 +26,11 @@ def genDigits(num, base=10, leastFirst=True):
       num, d = divmod(num, base)
       yield d
   else:
-    startPow = int(ceil(log(num+1, base)))-1
+    startPow = getNumDigits(num, base) - 1
     divTest = base**startPow
     d, num = divmod(num, divTest)
-    yield d
+    if d > 0:
+      yield d
     while divTest > 1:
       divTest /= base
       d, num = divmod(num, divTest)

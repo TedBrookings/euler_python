@@ -4,8 +4,15 @@ Add unit tests for the helper files:
   number_words.py
   permutation.py
   primes.py
-  pythagorean.py
 
 Do more problems
+
+Check all usage of digit_math.py : getNumDigits
+  previous increased digit 1 number too late (e.g. said 100 had 2, 101 had 3)
+  now fails at large numbers due to rounding error
+    genDigits with leastFirst=False has extra if statement to catch this
+
+Make all euler functions return answer so that verified answers can be used in
+  unit tests
 
 In the future, always unit tests first
