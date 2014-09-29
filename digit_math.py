@@ -187,6 +187,13 @@ def digitsToStr(digitNum, base=10):
     raise NotImplementedError("Can't covert digits to string for base > 36")
 
 
+def intToStr(num, base=10):
+  if base==10:
+    return str(num)
+  else:
+    return digitsToStr(genDigits(num, base=base, leastFirst=False), base=base)
+
+
 def genUniqueDigitNums(base=10, exclude0=False,
                        sortedDigits=False,
                        singleDigits=True,
