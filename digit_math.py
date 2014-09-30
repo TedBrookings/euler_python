@@ -2,6 +2,10 @@
 
 
 from math import log, ceil
+import sys
+if sys.version_info[0] == 2:
+  # get rid of 2.x range that produced list instead of iterator
+  range = xrange
 
 
 def getDigit(num, n, base=10):
@@ -194,14 +198,17 @@ def intToStr(num, base=10):
     return digitsToStr(genDigits(num, base=base, leastFirst=False), base=base)
 
 
-def genUniqueDigitNums(base=10, exclude0=False,
-                       sortedDigits=False,
-                       singleDigits=True,
-                       repeatDigits=True,
-                       maxNumDigits=float('inf'),
-                       maxDigit=None):
+def genUniqueDigits(base=10, exclude0=False,
+                    leading0=True,
+                    sortedDigits=False,
+                    singleDigits=True,
+                    repeatDigits=True,
+                    maxNumDigits=float('inf'),
+                    maxDigit=None):
   if maxDigit is None:
     maxDigit = base - 1
+  if exclude0:
+    leading0 = False
   
   firstNum = int(exclude0)
   if singleDigits:
@@ -210,11 +217,21 @@ def genUniqueDigitNums(base=10, exclude0=False,
   
   if not repeatDigits:
     maxNumDigits = min(maxNumDigits, maxDigit + 1 - firstNum)
-  
   repeatOffset = 1 - int(repeatDigits)
-  digits = [firstNum + repeatOffset, firstNum]
-  lastInd = 1
   
+  if sortedDigits:
+    if leading0 or exclude0:
+      digits = [firstNum + repeatOffset, firstNum]
+    else:
+      digits = [1, 0]
+  elif leading0:
+    digits = [0, repeatOffset]
+  elif exclude0 and not repeatDigits:
+    digits = [1, 2]
+  else:
+    digits = [1, 0]
+
+  lastInd = 1
   while sortedDigits:
     # increment digits, keeping largest digits to lower indices
     yield digits[:]
@@ -230,7 +247,10 @@ def genUniqueDigitNums(base=10, exclude0=False,
           if lastInd >= maxNumDigits:
             raise StopIteration()
           if repeatDigits:
-            digits = lastInd * [1] + [firstNum]
+            if leading0:
+              digits = [0] * (1 + lastind)
+            else:
+              digits = [1] + lastInd * [firstNum]
           else:
             digits = list(range(firstNum + lastInd, firstNum - 1, -1))
           j = None
@@ -267,7 +287,7 @@ def genUniqueDigitNums(base=10, exclude0=False,
           lastInd += 1
           if lastInd >= maxNumDigits:
             raise StopIteration()
-          digits = lastInd * [1] + [firstNum]
+          digits = [1] + lastInd * [firstNum]
           j = None
         else:
           # increase most significant digit
@@ -443,7 +463,91 @@ def genDigitFuncSums(func, base=10, display=False):
     return _genWithZeroDigitFuncSums(fVec, base, display)
 
 
+def testAssert(booleanVal, message):
+  # print Assertion message with line info on fail
+  if not booleanVal:
+    import os, sys
+    from traceback import extract_stack
+    callingTracebackStack = extract_stack()[1]
+    callingFile = os.path.relpath(callingTracebackStack[0])
+    callingLine = callingTracebackStack[1]
+    print(' In %s line %d:' % (callingFile, callingLine))
+    sys.tracebacklimit=0
+    raise AssertionError(message)
+
+
+def test(base=10, maxBasePow=4):
+  sys.stdout.write('Testing digit_math.py... ')
+  maxNum = base**maxBasePow
+  genDigitsAll = genUniqueDigits(base=base, exclude0=False,
+                                 leading0=True,
+                                 sortedDigits=False,
+                                 singleDigits=True,
+                                 repeatDigits=True,
+                                 maxNumDigits=float('inf'),
+                                 maxDigit=None)
+  genDigitsInt = genUniqueDigits(base=base, leading0=False)
+  genDigitsSorted = genUniqueDigits(base=base, sortedDigits=True,
+                                    leading0=False)
+  genDigitsSortNoReps = genUniqueDigits(base=base, sortedDigits=True,
+                                        leading0=False,repeatDigits=False)
+  
+  for n in range(maxNum + 1):
+    trueDigits = list(genDigits(n, base=base, leastFirst=False))
+    nDigits = digitsToInt(trueDigits, base=base)
+    testAssert( nDigits == n,
+                "genDigits(%d, base=%d) = %s, and digitsToInt(%s) -> %d != %d"
+                % (n, base, str(trueDigits), str(trueDigits), nDigits, n)
+              )
+    digits = next(genDigitsInt)
+    testAssert( trueDigits == digits,
+                "genUniqueDigits(base=%d) generated %s instead of %s"
+                % (base, str(digits), str(trueDigits))
+              )
+    nStr = intToStr(n, base=base)
+    digitStr = digitsToStr(digits, base=base)
+    testAssert( nStr == digitStr,
+                "intToStr(%d, base=%d) != digitsToStr(%s, base=%d)"
+                % (n, base, str(digits), base)
+              )
+    allDigits = next(genDigitsAll)
+    if allDigits[0] == 0 and n > 0:
+      testAssert( allDigits[1:] == digits[1:],
+                  "allDigits(base=%d) generated %s instead of %s"
+                  %  (base, str(allDigits), str([0] + digits[1:]))
+                )
+      for dummy in range(-1 + base**(len(allDigits)-1)):
+        next(genDigitsAll)
+      allDigits = next(genDigitsAll)
+    testAssert( allDigits == digits,
+                "allDigits(base=%d) generated %s instead of %s"
+                % (base, str(allDigits), str(digits))
+              )
+    if digits == sorted(digits, reverse=True):
+      # digits are in sorted order
+      sDigits = next(genDigitsSorted)
+      testAssert( sDigits == digits,
+                  "sortedDigits(base=%d) generated %s instead of %s"
+                  % (base, str(sDigits), str(digits))
+                )
+      if len(set(sDigits)) == len(sDigits):
+        # there are no repeats
+        sNoRepDigits = next(genDigitsSortNoReps)
+        testAssert( sNoRepDigits == digits,
+                    "sortedNoRepeatDigits(base=%d) generated %s instead of %s"
+                    % (base, str(sNoRepDigits), str(digits))
+                  )
+        
+              
+
+  print('passed')
+
+
 if __name__ == "__main__":
+  test(4, 6)
+  test(10, 4)
+  test(16, 3)
+  sys.exit(0)
   def _testPalindrome(num, base=10):
     import sys
     digits = reversed([d for d in genDigits(num, base)])
