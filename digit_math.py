@@ -387,6 +387,11 @@ def genUniqueDigits(base=10, exclude0=False,
 
 
 def genDigitFuncSums(func, base=10, display=False):
+  """
+  generate numbers n for whom:
+    sum(func(d) for d in digits) == n,
+  where digits is the list of digits (in specified base) that represent n
+  """
   # there are two generators: this one is for when func(0) == 0
   def _genNoZeroDigitFuncSums(fVec, base, display):  
     for digit in range(1, base):

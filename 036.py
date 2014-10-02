@@ -17,5 +17,5 @@ def euler36(maxNumber=10**6, baseBig=10, baseSmall=2):
 
 if __name__ == "__main__":
   import sys
-  args = (eval(a) for a in sys.argv[1:])
+  args = tuple(eval(a) for a in sys.argv[1:])
   euler36(*args)

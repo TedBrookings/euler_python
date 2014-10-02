@@ -12,4 +12,6 @@ def euler34(base=10, display=False):
 
 
 if __name__ == "__main__":
-  euler34()
+  import sys
+  args = tuple(eval(a) for a in sys.argv[1:])
+  euler34(*args)

@@ -3,6 +3,10 @@
 
 from primes import genPrimes, isPrime, genPrimeFactors
 from digit_math import genDigits
+import sys
+if sys.version_info[0] == 2:
+  # get rid of 2.x range that produced list instead of iterator
+  range = xrange
 
 
 def genLeftTruncatablePrimes(base=10, singleDigit=False):
@@ -81,7 +85,6 @@ def isLeftTruncatable(p, base=10, singleDigit=False):
 
 def isRightTruncatable(p, base=10, singleDigit=False):
   # test if a given prime p is right-truncatable
-  
   if p < base:
     return singleDigit
   p /= base
@@ -92,28 +95,42 @@ def isRightTruncatable(p, base=10, singleDigit=False):
   return isPrime(p)
 
 
-def euler37(base=10, display=False):
-  if display:
-    import sys
-    pSum = 0
-    for p in genRightTruncatablePrimes(base):
-      if isLeftTruncatable(p, base):
-        sys.stdout.write(' %d' % p)
-        sys.stdout.flush()
-        pSum += p
-      else:
-        sys.stdout.write(' ~%d' % p)
-        sys.stdout.flush()
-    sys.stdout.write('\n')
+def euler37(base=10, genRight=True, display=False):
+  """
+  Note that genRight tends to be MUCH faster, because the sequence of right-
+    truncatable primes tends to terminate quickly, whereas left-truncatable
+    primes may continue for a long time (forever?)
+  """
+  if genRight:
+    if display:
+      pSum = 0
+      for p in genRightTruncatablePrimes(base):
+        if isLeftTruncatable(p, base):
+          sys.stdout.write(' %d' % p) ; sys.stdout.flush()
+          pSum += p
+        else:
+          sys.stdout.write(' ~%d' % p) ; sys.stdout.flush()
+      sys.stdout.write('\n')
+    else:
+      pSum = sum(p for p in genRightTruncatablePrimes(base)
+                 if isLeftTruncatable(p, base))
   else:
-    pSum = sum(p for p in genRightTruncatablePrimes(base)
-               if isLeftTruncatable(p, base))
+    if display:
+      pSum = 0
+      for p in genLeftTruncatablePrimes(base):
+        if isRightTruncatable(p, base):
+          sys.stdout.write(' %d' % p) ; sys.stdout.flush()
+          pSum += p
+        else:
+          sys.stdout.write(' ~%d' % p) ; sys.stdout.flush()
+      sys.stdout.write('\n')
+    else:
+      pSum = sum(p for p in genLeftTruncatablePrimes(base)
+                 if isRightTruncatable(p, base))
   print('Sum of all left- and right-truncatable primes (base %d) is %d'
         % (base, pSum))
 
 
 if __name__ == "__main__":
-  import sys
-  args = (eval(a) for a in sys.argv[1:])
-  #print(list(genRightTruncatablePrimes(*args)))
+  args = tuple(eval(a) for a in sys.argv[1:])
   euler37(*args)

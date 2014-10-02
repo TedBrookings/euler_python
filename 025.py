@@ -3,7 +3,6 @@
 
 from fibonacci import genFibonacci, firstFibonacciTermWithNDigits
 from number_words import getRankName
-from digit_math import *
 
 def euler25(minDigits=1000, base=10, bruteForce=False):
   if bruteForce:
@@ -20,5 +19,5 @@ def euler25(minDigits=1000, base=10, bruteForce=False):
 
 if __name__ == "__main__":
   import sys
-  args = (eval(a) for a in sys.argv[1:])
+  args = tuple(eval(a) for a in sys.argv[1:])
   euler25(*args)

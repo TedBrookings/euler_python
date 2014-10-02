@@ -45,5 +45,5 @@ def euler38(base=10, maxDigit=None):
 
 
 if __name__ == '__main__':
-  args = (eval(a) for a in sys.argv[1:])
+  args = tuple(eval(a) for a in sys.argv[1:])
   euler38(*args)

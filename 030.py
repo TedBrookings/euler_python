@@ -14,4 +14,6 @@ def euler30(digitPower=5, base=10, display=False):
 
 
 if __name__ == "__main__":
-  euler30()
+  import sys
+  args = tuple(eval(a) for a in sys.argv[1:])
+  euler30(*args)

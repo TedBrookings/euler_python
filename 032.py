@@ -1,7 +1,11 @@
 #!/usr/bin/python
 
 
-from digit_math import genDigits
+from digit_math import genDigits, intToStr
+import sys
+if sys.version_info[0] == 2:
+  # get rid of 2.x range that produced list instead of iterator
+  range = xrange
 
 
 def genDigitsFromList(digitList, maxNumber, maxDigits, base):
@@ -43,16 +47,23 @@ def genPanDigitalProducts(maxDigit=9, displayResults=False, base=10):
       digitsProd = sorted(genDigits(prod, base))
       if digitsProd == remain2:
         if displayResults:
-          print('%d x %d == %d' % (d1, d2, prod))
+          if base == 10:
+            print('%d x %d == %d' % (d1, d2, prod))
+          else:
+            print('%s x %s == %s (base %d)'
+                  % (intToStr(d1, base), intToStr(d2, base),
+                     intToStr(prod, base), base)
+                 )
         yield prod
-  
 
-def euler32(maxDigit=9, displayResults=False, base=10):
+
+def euler32(maxDigit=9, base=10, displayResults=False):
   prods = set(genPanDigitalProducts(maxDigit, displayResults, base))
   prodSum = sum(prods)
-  print('Sum of all products in 1-%d pan-digital expressions is %d'
-        % (maxDigit, prodSum))
+  print('Sum of all products in 1-%d pan-digital expressions (base %d) is %d'
+        % (maxDigit, base, prodSum))
 
 
 if __name__ == "__main__":
-  euler32()
+  args = tuple(eval(a) for a in sys.argv[1:])
+  euler32(*args)
