@@ -238,7 +238,7 @@ def genUniqueDigits(base=10, exclude0=False,
                     leading0=True,
                     sortedDigits=False,
                     repeatDigits=True,
-                    singleDigits=True,
+                    minNumDigits=1,
                     maxNumDigits=float('inf'),
                     maxDigit=None):
   """
@@ -254,31 +254,20 @@ def genUniqueDigits(base=10, exclude0=False,
     maxNumDigits = min(maxNumDigits, maxDigit + 1 - firstNum)
   repeatOffset = 1 - int(repeatDigits)
   
-  if singleDigits:
+  if minNumDigits <= 1:
     for d in range(firstNum, maxDigit + 1):
       yield [d]
-  
-  if sortedDigits:
-    if leading0 or exclude0:
-      digits = [firstNum + repeatOffset, firstNum]
-    else:
-      digits = [1, 0]
-  elif leading0:
-    digits = [0, repeatOffset]
-  elif exclude0 and not repeatDigits:
-    digits = [1, 2]
+    digits = [d]
   else:
-    digits = [1, 0]
-
-  lastInd = 1
+    digits = [maxDigit] * (minNumDigits - 1)
+  
+  lastInd = len(digits) - 1
   while sortedDigits:
     # increment digits, keeping largest digits to lower indices
-    yield digits[:]
-      
     j = lastInd ; i = j - 1
-    while digits[j] == digits[i] - repeatOffset:
+    while digits[j] >= digits[i] - repeatOffset:
       # current digit has reached its maximum
-      if i == 0:
+      if i <= 0:
         # current digit is second-most significant digit
         if digits[i] == maxDigit:
           # most significant digit is already at its max, add a digit or stop
@@ -311,15 +300,16 @@ def genUniqueDigits(base=10, exclude0=False,
     if j is not None:
       # increment current digit
       digits[j] += 1
+    # yield the correctly incremented digits
+    yield digits[:]
+
   
   while repeatDigits:
     # increment digits, allowing digits to be disordered and repeated
-    yield digits[:]
-    
     j = lastInd ; i = j - 1
-    while digits[j] == maxDigit:
+    while digits[j] >= maxDigit:
       # current digit has reached its maximum
-      if i == 0:
+      if i <= 0:
         # current digit is second-most significant digit
         if digits[i] == maxDigit:
           # most significant digit is already at its max, add a digit or stop
@@ -340,20 +330,17 @@ def genUniqueDigits(base=10, exclude0=False,
     if j is not None:
       # increment current digit
       digits[j] += 1
+    # yield the correctly incremented digits
+    yield digits[:]
+
   
   okToYield = True
   while True:
-    # increment digits, allowing digits to be disordered but NOT repeated
-    if okToYield:
-      yield digits[:]
-    else:
-      okToYield = True
-      
     # increment digits, allowing digits to be disordered
     j = lastInd ; i = j - 1
-    while digits[j] == maxDigit:
+    while digits[j] >= maxDigit:
       # current digit has reached its maximum
-      if i == 0:
+      if i <= 0:
         # current digit is second-most significant digit
         if digits[i] == maxDigit:
           # most significant digit is already at its max, add a digit or stop
@@ -392,6 +379,11 @@ def genUniqueDigits(base=10, exclude0=False,
                                   )
                             )
         digits[j+1:] = allowDigits[:lastInd - j]
+    # increment digits, allowing digits to be disordered but NOT repeated
+    if okToYield:
+      yield digits[:]
+    else:
+      okToYield = True
 
 
 def genDigitFuncSums(func, base=10, display=False):
@@ -509,7 +501,7 @@ def testAssert(booleanVal, message):
   if not booleanVal:
     import os, sys
     from traceback import extract_stack
-    callingTracebackStack = extract_stack()[1]
+    callingTracebackStack = extract_stack()[-2]
     callingFile = os.path.relpath(callingTracebackStack[0])
     callingLine = callingTracebackStack[1]
     print(' In %s line %d:' % (callingFile, callingLine))
@@ -583,8 +575,8 @@ def test_genUniqueDigits(base=10, maxBasePow=4):
   genDigitsAll = genUniqueDigits(base=base, exclude0=False,
                                  leading0=True,
                                  sortedDigits=False,
-                                 singleDigits=True,
                                  repeatDigits=True,
+                                 minNumDigits=1,
                                  maxNumDigits=float('inf'),
                                  maxDigit=None)
   genDigitsInt = genUniqueDigits(base=base, leading0=False)
@@ -592,10 +584,13 @@ def test_genUniqueDigits(base=10, maxBasePow=4):
                                     leading0=False)
   genDigitsSortNoReps = genUniqueDigits(base=base, sortedDigits=True,
                                         leading0=False,repeatDigits=False)
+  genThreePlus = genUniqueDigits(base=base, repeatDigits=False,
+                                 minNumDigits=3,
+                                 maxNumDigits=maxBasePow)
   
   genPal = genPalindromes(maxDigit=maxBasePow, base=base)
   
-  for n in range(maxNum + 1):
+  for n in range(maxNum):
     # test genDigits() and digitsToInt()
     trueDigits = list(genDigits(n, base=base, leastFirst=False))
     nDigits = digitsToInt(trueDigits, base=base)
@@ -632,20 +627,29 @@ def test_genUniqueDigits(base=10, maxBasePow=4):
                 % (base, str(allDigits), str(digits))
               )
     #  -with digits sorted into decreasing order
-    if digits == sorted(digits, reverse=True):
+    isSorted = (digits == sorted(digits, reverse=True))
+    noRepeats = (len(set(digits)) == len(digits))
+    if isSorted:
       # digits are in sorted order, repeats allowed
       sDigits = next(genDigitsSorted)
       testAssert( sDigits == digits,
                   "sortedDigits(base=%d) generated %s instead of %s"
                   % (base, str(sDigits), str(digits))
                 )
-      if len(set(sDigits)) == len(sDigits):
+      if noRepeats:
         # digits are sorted, and no digit may repeat
         sNoRepDigits = next(genDigitsSortNoReps)
         testAssert( sNoRepDigits == digits,
                     "sortedNoRepeatDigits(base=%d) generated %s instead of %s"
                     % (base, str(sNoRepDigits), str(digits))
                   )
+    #  -with minimum three digits and maximum maxBasePow digits, no repeats
+    if getNumDigits(n, base=base) >= 3 and noRepeats:
+      tpDigits = next(genThreePlus)
+      testAssert( tpDigits == digits,
+                  "threePlusDigits(base=%d) generated %s instead of %s"
+                  % (base, str(tpDigits), str(digits))
+                )
     # test isPalindrome() and genPalendromes()
     if isPalindrome(n, base):
       pal = next(genPal)
@@ -653,6 +657,13 @@ def test_genUniqueDigits(base=10, maxBasePow=4):
                   "genPalendromes(base=%d) generated %s instead of %s"
                   % (base, intToStr(pal,base=base), nStr)
                 )
+  try:
+    tpDigits = next(genThreePlus)
+    raise AssertionError( "genUniqueDigits did not generate all threePlus,"
+                          " still had not produced %s" % str(tpDigits) )
+  except StopIteration:
+    pass
+
   try:
     palStr = intToStr(next(genPal), base=base)
     raise AssertionError( "genPalendromes did not generate all palendromes,"
