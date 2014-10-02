@@ -9,18 +9,35 @@ if sys.version_info[0] == 2:
 
 
 def getDigit(num, n, base=10):
-  # return nth-digit of num
-  return int(num / base**(n-1)) % base
+  """
+  return nth least-significant digit of integer num (n=0 returns ones place)
+  in specified base
+  """
+  return int(num / base**n) % base
 
 
 def getNumDigits(num, base=10):
-  # return the number of significant digits of num
-  return int(ceil(log(num+1, base)))
+  """
+  return the number of significant digits of integer num in specified base
+  if num == 0, returns 0
+  """
+  if base == 2:
+    return num.bit_length()
+  else:
+    # compute number of digits
+    absNum = abs(num)
+    nPutative = int(ceil(log(absNum+1, base)))
+    # for large numbers, nPutative may err due to rounding error on log
+    if absNum > 1000000000000000 and base**(nPutative-1) > absNum:
+      nPutative -= 1
+    return nPutative
 
 
 def genDigits(num, base=10, leastFirst=True):
-  # return a generator to get all the significant digits of num
-  # by default, return the least significant digits first
+  """
+  Generate all the significant digits of integer num in specified base.
+  By default, return the least significant digits first
+  """
   if num == 0:
     yield 0
   elif leastFirst:
@@ -42,7 +59,9 @@ def genDigits(num, base=10, leastFirst=True):
 
 
 def isPalindrome(num, base=10):
-  # return true if num is a palindrome, false otherwise
+  """
+  return True if integer num is a palindrome in specified base, False otherwise
+  """
   digits = list(genDigits(num, base))
   for n in range(len(digits) / 2):
     if digits[n] != digits[-1 - n]:
@@ -51,8 +70,9 @@ def isPalindrome(num, base=10):
 
 
 def genNDigitPalindrome(n, base=10):
-  # return generator for all n-digit palindromes
-  
+  """
+  Generate all n-digit palendromes in requested base, in sequential order
+  """
   def _incrementPalinVec(palinVec, base):
     # Increment a list of digits that encodes a palindrome number
     n = 0
@@ -89,7 +109,10 @@ def genNDigitPalindrome(n, base=10):
       mult *= base
     return num
 
-  if n % 2:
+  if n == 1:
+    for n in range(base):
+      yield n
+  elif n % 2:
     # generate a palindrome with 2 * nHalf + 1 digits
     palinVec = [0] * (n / 2) + [1]
     yield _palinVecToOdd(palinVec, base)
@@ -104,6 +127,9 @@ def genNDigitPalindrome(n, base=10):
 
 
 def genPalindromes(maxNumber=None, maxDigit=float('inf'), base=10):
+  """
+  Generate all palendromes in requested base, in sequential order
+  """
   if maxNumber is None:
     n = 1
     while n <= maxDigit:
@@ -122,7 +148,9 @@ def genPalindromes(maxNumber=None, maxDigit=float('inf'), base=10):
 
 
 def digitSum(numbers, base=10):
-  # add an iterator or list of numbers represented as array of digits
+  """
+  Add an iterator or list of numbers represented as array of digits
+  """
   if type(numbers) is list:
     s = numbers[0]
     for n in numbers[1:]:
@@ -135,7 +163,9 @@ def digitSum(numbers, base=10):
 
 
 def digitPlusEqual(n1, n2, base=10):
-  # n1 += n2 for numbers represented as array of digits
+  """
+  n1 += n2 for numbers represented as array of digits
+  """
   carry = 0
   while len(n2) > len(n1):
     n1.insert(0, 0)
@@ -162,8 +192,9 @@ def digitPlusEqual(n1, n2, base=10):
 
 
 def digitsToInt(digits, base=10):
-  # convert array of digits to an integer
-  
+  """
+  Convert list of digits (in specified base) to an integer
+  """
   # first get an iterator to digits
   if not hasattr(digits, 'next'):
     # digits is an iterator
@@ -177,7 +208,9 @@ def digitsToInt(digits, base=10):
 
   
 def digitsToStr(digitNum, base=10):
-  # convert array digits to a string suitable for printing
+  """
+  Convert list of digits (in specified base) to a string suitable for printing
+  """
   if base <= 10:
     return ''.join(chr(d + 48) for d in digitNum)
   elif base <= 36:
@@ -192,6 +225,9 @@ def digitsToStr(digitNum, base=10):
 
 
 def intToStr(num, base=10):
+  """
+  Convert integer to a string suitable for printing, in specified base
+  """
   if base==10:
     return str(num)
   else:
@@ -201,23 +237,26 @@ def intToStr(num, base=10):
 def genUniqueDigits(base=10, exclude0=False,
                     leading0=True,
                     sortedDigits=False,
-                    singleDigits=True,
                     repeatDigits=True,
+                    singleDigits=True,
                     maxNumDigits=float('inf'),
                     maxDigit=None):
+  """
+  Generate a series of digits (represented as lists of integers) with requested
+  properties
+  """
   if maxDigit is None:
     maxDigit = base - 1
   if exclude0:
     leading0 = False
-  
   firstNum = int(exclude0)
-  if singleDigits:
-    for d in range(firstNum, maxDigit + 1):
-      yield [d]
-  
   if not repeatDigits:
     maxNumDigits = min(maxNumDigits, maxDigit + 1 - firstNum)
   repeatOffset = 1 - int(repeatDigits)
+  
+  if singleDigits:
+    for d in range(firstNum, maxDigit + 1):
+      yield [d]
   
   if sortedDigits:
     if leading0 or exclude0:
@@ -464,7 +503,9 @@ def genDigitFuncSums(func, base=10, display=False):
 
 
 def testAssert(booleanVal, message):
-  # print Assertion message with line info on fail
+  """
+  print Assertion message with line info on fail
+  """
   if not booleanVal:
     import os, sys
     from traceback import extract_stack
@@ -476,8 +517,68 @@ def testAssert(booleanVal, message):
     raise AssertionError(message)
 
 
-def test(base=10, maxBasePow=4):
-  sys.stdout.write('Testing digit_math.py... ')
+def test_genDigits(largeBase):
+  """
+  Test genDigits, digitsToInt, getDigit, for 0, and for a very large number
+  """
+  # construct reversed digits, and corresponding integer
+  digits = [d for d in range(1, largeBase)]
+  p = 1 ; n = 0
+  for d in digits:
+    n += p * d
+    p *= largeBase
+  # test genDigits() normally (least significant first)
+  gDigits = list(genDigits(n, base=largeBase))
+  testAssert( gDigits == digits,
+              "genDigits(base=%d) generated %s instead of %s"
+              % (largeBase, str(gDigits), str(digits))
+            )
+  # test getDigit()
+  for k, d in enumerate(digits):
+    dG = getDigit(n, k, base=largeBase)
+    testAssert( dG == d,
+                "getDigit(%d, base=%d) returned %d instead of %d"
+                % (n, largeBase, dG, d)
+              )
+  # test genDigits() with most significant digits first
+  gDigits = list(genDigits(n, base=largeBase, leastFirst=False))
+  digits.reverse()
+  testAssert( gDigits == digits,
+              "genDigits(base=%d) generated %s instead of %s"
+              % (largeBase, str(gDigits), str(digits))
+            )
+  # test digitsToInt
+  nDigits = digitsToInt(digits, base=largeBase)
+  testAssert( nDigits == n,
+              "digitsToInt(%s, base=%d) = %d instead of %d"
+              % (str(digits), largeBase, nDigits, n)
+            )
+  
+  # test genDigits() on 0
+  digits = genDigits(0, base=largeBase)
+  testAssert( genDigits(0, base=largeBase),
+              "genDigits(0, base=%d) produced %s instead of [0]"
+              % (largeBase, str(digits))
+            )
+  digits = genDigits(0, base=largeBase, leastFirst=False)
+  testAssert( genDigits(0, base=largeBase),
+              "genDigits(0, base=%d) produced %s instead of [0]"
+              % (largeBase, str(digits))
+            )
+  # test getDigit() on 0
+  dG = getDigit(0, 0, base=largeBase)
+  testAssert( dG == 0,
+              "getDigit(0, base=%d) returned %d instead of 0"
+              % (largeBase, dG)
+            )
+
+
+def test_genUniqueDigits(base=10, maxBasePow=4):
+  """
+  Run fairly comprehensive test on genUniqueDigits(), digitsToInt(),
+    digitsToStr(), and intToStr() in specified base
+  Test involves incrementing digits from 0 to base**maxBasePow
+  """
   maxNum = base**maxBasePow
   genDigitsAll = genUniqueDigits(base=base, exclude0=False,
                                  leading0=True,
@@ -492,24 +593,31 @@ def test(base=10, maxBasePow=4):
   genDigitsSortNoReps = genUniqueDigits(base=base, sortedDigits=True,
                                         leading0=False,repeatDigits=False)
   
+  genPal = genPalindromes(maxDigit=maxBasePow, base=base)
+  
   for n in range(maxNum + 1):
+    # test genDigits() and digitsToInt()
     trueDigits = list(genDigits(n, base=base, leastFirst=False))
     nDigits = digitsToInt(trueDigits, base=base)
     testAssert( nDigits == n,
                 "genDigits(%d, base=%d) = %s, and digitsToInt(%s) -> %d != %d"
                 % (n, base, str(trueDigits), str(trueDigits), nDigits, n)
               )
+    # test intToStr() and digitsToStr()
+    nStr = intToStr(n, base=base)
+    digitStr = digitsToStr(trueDigits, base=base)
+    testAssert( nStr == digitStr,
+                "intToStr(%d, base=%d) != digitsToStr(%s, base=%d)"
+                % (n, base, str(trueDigits), base)
+              )
+    # test genUniqueDigits:
+    #  -with no leading 0s (i.e. generate integer digits)
     digits = next(genDigitsInt)
     testAssert( trueDigits == digits,
                 "genUniqueDigits(base=%d) generated %s instead of %s"
                 % (base, str(digits), str(trueDigits))
               )
-    nStr = intToStr(n, base=base)
-    digitStr = digitsToStr(digits, base=base)
-    testAssert( nStr == digitStr,
-                "intToStr(%d, base=%d) != digitsToStr(%s, base=%d)"
-                % (n, base, str(digits), base)
-              )
+    #  -with leading 0s (i.e. generate all possible digit sequences in order)
     allDigits = next(genDigitsAll)
     if allDigits[0] == 0 and n > 0:
       testAssert( allDigits[1:] == digits[1:],
@@ -523,30 +631,57 @@ def test(base=10, maxBasePow=4):
                 "allDigits(base=%d) generated %s instead of %s"
                 % (base, str(allDigits), str(digits))
               )
+    #  -with digits sorted into decreasing order
     if digits == sorted(digits, reverse=True):
-      # digits are in sorted order
+      # digits are in sorted order, repeats allowed
       sDigits = next(genDigitsSorted)
       testAssert( sDigits == digits,
                   "sortedDigits(base=%d) generated %s instead of %s"
                   % (base, str(sDigits), str(digits))
                 )
       if len(set(sDigits)) == len(sDigits):
-        # there are no repeats
+        # digits are sorted, and no digit may repeat
         sNoRepDigits = next(genDigitsSortNoReps)
         testAssert( sNoRepDigits == digits,
                     "sortedNoRepeatDigits(base=%d) generated %s instead of %s"
                     % (base, str(sNoRepDigits), str(digits))
                   )
-        
+    # test isPalindrome() and genPalendromes()
+    if isPalindrome(n, base):
+      pal = next(genPal)
+      testAssert( pal == n,
+                  "genPalendromes(base=%d) generated %s instead of %s"
+                  % (base, intToStr(pal,base=base), nStr)
+                )
+  try:
+    palStr = intToStr(next(genPal), base=base)
+    raise AssertionError( "genPalendromes did not generate all palendromes,"
+                          " still had not produced %s" % palStr )
+  except StopIteration:
+    pass
+  
               
+def test(genTests=[(2,6), (3,6), (4,6), (12,4)], largeBase=20):
+  """
+  Unit test for functions in digit_math.py
+  genTests specifies list of bases and maxBasePows that will be passed to
+    test_genDigits
+  """
+  sys.stdout.write('Testing digit_math.py... ')
+  sys.stdout.flush()
+  
+  # test digitsToInt and genDigits for a very large number
+  test_genDigits(largeBase)
+  
+  # test genUniqueDigits for each base/power combination
+  for base, maxBasePow in genTests:
+    test_genUniqueDigits(base=base, maxBasePow=maxBasePow)
 
   print('passed')
 
 
 if __name__ == "__main__":
-  test(4, 6)
-  test(10, 4)
-  test(16, 3)
+  test()
   sys.exit(0)
   def _testPalindrome(num, base=10):
     import sys
