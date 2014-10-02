@@ -3,6 +3,10 @@
 
 from primes import genPrimes, _primes
 from math import sqrt
+import sys
+if sys.version_info[0] == 2:
+  # get rid of 2.x range that produced list instead of iterator
+  range = xrange
 
 
 def isPrime(num):

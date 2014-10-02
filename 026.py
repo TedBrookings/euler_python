@@ -1,6 +1,12 @@
 #!/usr/bin/python
 
 
+import sys
+if sys.version_info[0] == 2:
+  # get rid of 2.x range that produced list instead of iterator
+  range = xrange
+
+
 def getCycleLength(n, d, base=10):
   numerators = []
   while n not in numerators:

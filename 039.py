@@ -5,7 +5,7 @@ from pythagorean import genPythagoreanWithPerimeter
 
 
 def euler39(maxPerimeter=1000):
-  sums =  [0 for p in range(1 + maxPerimeter)]
+  sums = [0] * (1 + maxPerimeter)
   for trip in genPythagoreanWithPerimeter(maxPerimeter=maxPerimeter):
     perimeter = trip[-1]
     sums[perimeter] += 1

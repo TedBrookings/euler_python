@@ -1,6 +1,12 @@
 #!/usr/bin/python
 
 
+import sys
+if sys.version_info[0] == 2:
+  # get rid of 2.x range that produced list instead of iterator
+  range = xrange
+
+
 def euler31Slow(totalValue=200, coins=[1, 2, 5, 10, 20, 50, 100, 200]):
   # Keep list with set of ways to make each value. Each way is a tuple
   #  with an integer number of coins for each coin value

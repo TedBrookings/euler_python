@@ -1,6 +1,12 @@
 #!/usr/bin/python
 
 
+import sys
+if sys.version_info[0] == 2:
+  # get rid of 2.x range that produced list instead of iterator
+  range = xrange
+
+
 def euler1(maxInt=1000, primeSet={3, 5}):
   multiples = [n for n in range(1, maxInt) if any(n % p == 0 for p in primeSet)]
   setStr = ' '.join('%s' % p for p in primeSet)
@@ -9,7 +15,6 @@ def euler1(maxInt=1000, primeSet={3, 5}):
 
 
 def _parseArguments():
-  import sys
   arguments = sys.argv
   if len(arguments) >= 2:
     maxInt = int(arguments[1])

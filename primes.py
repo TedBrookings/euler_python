@@ -4,7 +4,9 @@ import operator
 from math import sqrt, ceil
 import sys
 write = sys.stdout.write
-
+if sys.version_info[0] == 2:
+  # get rid of 2.x range that produced list instead of iterator
+  range = xrange
 
 _primes = [2, 3, 5]
 

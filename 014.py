@@ -1,12 +1,13 @@
 #!/usr/bin/python
 
 
-#_collatzMap = {1 : 1}
+import sys
+if sys.version_info[0] == 2:
+  # get rid of 2.x range that produced list instead of iterator
+  range = xrange
 
 
 def getCollatzChainLen(n, _collatzMap):
-  #global _collatzMap
-  
   chain = []
   while n not in _collatzMap:
     chain.append(n)
@@ -29,6 +30,7 @@ def genCollatzChains(nMax=1000000):
   _collatzMap = {1 : 1}
   for n in range(2, nMax):
     yield (getCollatzChainLen(n, _collatzMap), n)
+    
 
 
 def euler14(nMax=1000000):
@@ -38,4 +40,5 @@ def euler14(nMax=1000000):
 
 
 if __name__ == "__main__":
-  euler14()
+  args = tuple(eval(a) for a in sys.argv[1:])
+  euler14(*args)

@@ -1,6 +1,12 @@
 #!/usr/bin/python
 
 
+import sys
+if sys.version_info[0] == 2:
+  # get rid of 2.x range that produced list instead of iterator
+  range = xrange
+
+
 def genTriangleLines(triangleFile):
   with open(triangleFile, 'r') as fIn:
     for line in fIn:
@@ -26,4 +32,5 @@ def euler18(triangleFile='data/euler018.txt', pathTypeStr='max'):
   
   
 if __name__ == "__main__":
-  euler18()
+  args = tuple(eval(a) for a in sys.argv[1:])
+  euler18(*args)
