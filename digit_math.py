@@ -235,7 +235,7 @@ def intToStr(num, base=10):
 
 
 def genUniqueDigits(base=10, exclude0=False,
-                    leading0=True,
+                    leading0=False,
                     sortedDigits=False,
                     repeatDigits=True,
                     minNumDigits=1,
@@ -243,7 +243,17 @@ def genUniqueDigits(base=10, exclude0=False,
                     maxDigit=None):
   """
   Generate a series of digits (represented as lists of integers) with requested
-  properties
+  properties. Options:
+    base: interpret digits in this base, if maxDigit is unspecified, use all
+          allowed digit values in 0, 1, 2, 3, ..., base-1
+    exclude0: if True, don't generate digit lists with any zeros
+    leading0: if True, allow digit lists with zero in most significant place
+    sortedDigits: if True, generate digit lists sorted in reverse order
+    repeatDigits: if False, don't generate lists with any repeated digits
+    minNumDigits: don't generate any lists with fewer than this many digits
+    maxNumDigits: don't generate any lists with more than this many digits
+    maxDigit: if specified, don't generate lists that contain any digits
+              greater than this value
   """
   if maxDigit is None:
     maxDigit = base - 1
@@ -276,7 +286,7 @@ def genUniqueDigits(base=10, exclude0=False,
             raise StopIteration()
           if repeatDigits:
             if leading0:
-              digits = [0] * (1 + lastind)
+              digits = [0] * (1 + lastInd)
             else:
               digits = [1] + lastInd * [firstNum]
           else:
@@ -316,7 +326,10 @@ def genUniqueDigits(base=10, exclude0=False,
           lastInd += 1
           if lastInd >= maxNumDigits:
             raise StopIteration()
-          digits = [1] + lastInd * [firstNum]
+          if leading0:
+            digits = [firstNum] * (1 + lastInd)
+          else:
+            digits = [1] + lastInd * [firstNum]
           j = None
         else:
           # increase most significant digit
@@ -349,6 +362,8 @@ def genUniqueDigits(base=10, exclude0=False,
             raise StopIteration()
           if exclude0:
             digits = list(range(1,lastInd+2))
+          elif leading0:
+            digits = list(range(lastInd+1))
           else:
             digits = [1] + [0] + list(range(2,lastInd+1))
           j = None
@@ -386,105 +401,57 @@ def genUniqueDigits(base=10, exclude0=False,
       okToYield = True
 
 
-def genDigitFuncSums(func, base=10, display=False):
+def genDigitFuncSums(func, minNumDigits=2, base=10, display=False):
   """
   generate numbers n for whom:
     sum(func(d) for d in digits) == n,
   where digits is the list of digits (in specified base) that represent n
   """
+  def _displayMatch(base, digits, sumVal):
+    if base == 10:
+      print('%s acting on %s sums to %d'% (func.__name__, str(digits), sumVal))
+    else:
+      print('%s acting on %s sums to %s (base %d)'
+            % (func.__name__, str(digits), intToStr(sumVal, base=base), base))
+
   # there are two generators: this one is for when func(0) == 0
-  def _genNoZeroDigitFuncSums(fVec, base, display):  
-    for digit in range(1, base):
-      sumVal = fVec[digit]
-      sumDigits = list(genDigits(sumVal, base))
-      if len(sumDigits) > 1:
-        sumDigits = sorted((d for d in sumDigits if d != 0), reverse=True)
-        if sumDigits == [digit]:
-          if display:
-            print('%s sums to %d' % (str([digit]), sumVal))
-          yield sumVal
-    
-    digits = [1, 1]
-    maxDigit = base - 1
-    lastInd = 1
-    while True:
-      # compute sum of the func of the digits
+  def _genNoZeroDigitFuncSums(fVec, base, display):
+    maxDigit = base - 1  
+    for digits in genUniqueDigits(base=base, sortedDigits=True, exclude0=True,
+                                  minNumDigits=minNumDigits):
       sumVal = sum(fVec[d] for d in digits)
-      # sort them, and throw out any zeros
-      sumDigits = sorted((d for d in genDigits(sumVal, base) if d != 0),
+      sumDigits = sorted((d for d in genDigits(sumVal, base=base) if d != 0),
                          reverse=True)
       if sumDigits == digits:
-        # the sum of the function of the digits matches the digits
         if display:
-          print('%s sums to %d' % (str(digits), sumVal))
+          _displayMatch(base, digits, sumVal)
         yield sumVal
-      if digits[-2] == maxDigit:
-        # check if it's time to stop looking
+      if len(digits) > 1 and digits[-2] == maxDigit:
+        # check if it's time to stop search
         digitsVal = digitsToInt(reversed(digits), base=base)
         if sumVal < digitsVal:
-          # the number represented by the digits is so large no sum will ever
+          # the number represented by the digits is so large, no sum will ever
           # match it
           raise StopIteration()
-      
-      # increment digits, keeping largest digits to lower indices and never
-      # using the digit 0
-      j = lastInd
-      i = j - 1
-      while digits[i] == digits[j]:
-        if i == 0:
-          if digits[i] == maxDigit:
-            lastInd += 1
-            digits = lastInd * [1] + [0]
-            j = lastInd
-          else:
-            digits[j] = 1
-            j = 0
-          break
-        else:
-          digits[j] = 1
-          j = i
-          i -= 1
-      digits[j] += 1
+  
   # there are two generators: this one is for when func(0) != 0
   def _genWithZeroDigitFuncSums(fVec, base, display):  
-    digits = [1, 0]
-    maxDigit = base - 1
-    lastInd = 1
-    while True:
-      # compute sum of the func of the digits
+    maxDigit = base - 1  
+    for digits in genUniqueDigits(base=base, sortedDigits=True, leading0=False,
+                                  minNumDigits=minNumDigits):
       sumVal = sum(fVec[d] for d in digits)
-      if sorted(genDigits(sumVal, base), reverse=True) == digits:
-        # the sum of the function of the digits matches the digits
+      sumDigits = sorted(genDigits(sumVal, base=base), reverse=True)
+      if sumDigits == digits:
         if display:
-          print('%s sums to %d' % (str(digits), sumVal))
+          _displayMatch(base, digits, sumVal)
         yield sumVal
-      if digits[-2] == maxDigit and digits[-1] > 0:
-        # check if it's time to stop looking
+      if len(digits) > 1 and digits[-2] == maxDigit and digits[-1] > 0:
+        # check if it's time to stop search
         digitsVal = digitsToInt(reversed(digits), base=base)
         if sumVal < digitsVal:
-          # the number represented by the digits is so large no sum will ever
+          # the number represented by the digits is so large, no sum will ever
           # match it
           raise StopIteration()
-      
-      # increment digits, keeping largest digits to lower indices
-      j = lastInd
-      i = j - 1
-      while digits[i] == digits[j]:
-        if i == 0:
-          if digits[i] == maxDigit:
-            lastInd += 1
-            digits = [1] + lastInd * [0]
-            j = None
-          else:
-            digits[j] = 0
-            j = 0
-          break
-        else:
-          digits[j] = 0
-          j = i
-          i -= 1
-      if j is not None:
-        digits[j] += 1
   
   # pre-compute the function of the digits
   fVec = [func(d) for d in range(base)]
@@ -577,21 +544,17 @@ def test_genUniqueDigits(base=10, maxBasePow=4):
   Test involves incrementing digits from 0 to base**maxBasePow
   """
   maxNum = base**maxBasePow
-  genDigitsAll = genUniqueDigits(base=base, exclude0=False,
-                                 leading0=True,
-                                 sortedDigits=False,
-                                 repeatDigits=True,
-                                 minNumDigits=1,
-                                 maxNumDigits=float('inf'),
+  genDigitsAll = genUniqueDigits(base=base, exclude0=False, leading0=True,
+                                 sortedDigits=False, repeatDigits=True,
+                                 minNumDigits=1, maxNumDigits=float('inf'),
                                  maxDigit=None)
   genDigitsInt = genUniqueDigits(base=base, leading0=False)
   genDigitsSorted = genUniqueDigits(base=base, sortedDigits=True,
                                     leading0=False)
   genDigitsSortNoReps = genUniqueDigits(base=base, sortedDigits=True,
                                         leading0=False,repeatDigits=False)
-  genThreePlus = genUniqueDigits(base=base, repeatDigits=False,
-                                 minNumDigits=3,
-                                 maxNumDigits=maxBasePow)
+  genThreePlus = genUniqueDigits(base=base, repeatDigits=False, leading0=True,
+                                 minNumDigits=3, maxNumDigits=maxBasePow)
   
   genPal = genPalindromes(maxDigit=maxBasePow, base=base)
   
@@ -651,6 +614,9 @@ def test_genUniqueDigits(base=10, maxBasePow=4):
     #  -with minimum three digits and maximum maxBasePow digits, no repeats
     if getNumDigits(n, base=base) >= 3 and noRepeats:
       tpDigits = next(genThreePlus)
+      if n > 0:
+        while(tpDigits[0] == 0):
+          tpDigits = next(genThreePlus)
       testAssert( tpDigits == digits,
                   "threePlusDigits(base=%d) generated %s instead of %s"
                   % (base, str(tpDigits), str(digits))
