@@ -3,14 +3,15 @@ Add unit tests for the helper files:
   number_words.py
   permutation.py
   primes.py
+Add test.py that calls all unit tests
 
 Do more problems
 
 Make all euler functions return answer so that verified answers can be used in
   unit tests
-
+  -Need to rename problem files to start with a letter, since python has
+   trouble importing files whose name starts with a number
+  
 Make all problem files use argparse to pass arguments
-
-In all files that use range, alias range -> xrange if version < 3
 
 In the future, always unit tests first
