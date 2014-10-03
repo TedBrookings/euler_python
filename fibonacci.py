@@ -2,6 +2,8 @@
 
 
 from math import sqrt, log, log1p, ceil
+from unitTests import testAssert
+import sys
 
 
 def getNthFibonacci(n):
@@ -41,8 +43,10 @@ def getNumDigitsFibonacci(n, base=10):
 
 
 def firstFibonacciTermWithNDigits(n, base=10):
-  # Compute the term number of the first Fibonacci number with n digits
-  # should check when approximation becomes accurate for base != 10
+  """
+  Compute the term number of the first Fibonacci number with n digits
+  should check when approximation becomes accurate for base != 10
+  """
   if n == 1:
     return 1
   root5 = sqrt(5)
@@ -52,24 +56,63 @@ def firstFibonacciTermWithNDigits(n, base=10):
 
 
 def genFibonacci(maxFibonacci=float('inf')):
-  # Generate the Fibonacci sequence
+  """
+  generate the numbers of the Fibonacci sequence
+  """
+  if maxFibonacci < 1:
+    raise StopIteration()
   f1 = 1
   yield f1
   f2 = 1
   while f2 < maxFibonacci:
     yield f2
     f1, f2 = f2, f1 + f2
+  if f2 == maxFibonacci:
+    yield f2
 
 
-def demoFibonacci(calcTerm=50, numDigitsTerm=10**6, firstDigits=10**20):  
-  # Demo some of the functions
-  print('%d term of Fibonacci sequence is %d'
-        % (calcTerm, getNthFibonacci(calcTerm)))
-  print('Number of digits in %d term is %d'
-        % (numDigitsTerm, getNumDigitsFibonacci(numDigitsTerm)))
-  print('First term with %d digits is term %d'
-        % (firstDigits, firstFibonacciTermWithNDigits(firstDigits)))
+def test(maxFibDigits=10000, testBases=[2, 10, 12], maxAccurateCalcTerm=70):
+  """
+  Test the functions in fibonacci.py
+  """
+  from number_words import getRankName
+  sys.stdout.write('Testing fibonacci... ')
+  sys.stdout.flush()
+
+  for base in testBases:
+    n = 0
+    numFibDigits = 1
+    nextFibCheck = base
+    for fib in genFibonacci():
+      n += 1
+      rankName = getRankName(n)
+      while fib >= nextFibCheck:
+        numFibDigits += 1
+        nextFibCheck *= base
+      if n <= maxAccurateCalcTerm:
+        fibCalc = getNthFibonacci(n)
+        testAssert( fibCalc == fib,
+                    "Generated %s fibonacci as %d, calculated as %d (err=%d)"
+                    % (rankName, fib, fibCalc, fibCalc - fib)
+                  )
+      calcNumFibDigits = getNumDigitsFibonacci(n, base=base)
+      testAssert( calcNumFibDigits == numFibDigits,
+                  "%s fibonacci number has %d digits, but calculated %d"
+                  % (rankName, numFibDigits, calcNumFibDigits)
+                )
+      if numFibDigits >= maxFibDigits:
+        break
   
+    stopTermNum = firstFibonacciTermWithNDigits(maxFibDigits, base=base)
+    testAssert( stopTermNum == n,
+                "Calculated first term with %d digits was %s, however first term"
+                " was actually %s"
+                % (maxFibDigits, getRankName(stopTermNum), rankName)
+              )
+    
+  print('passed')    
   
+
 if __name__ == "__main__":
-  demoFibonacci()
+  args = tuple(eval(a) for a in sys.argv[1:])
+  test()

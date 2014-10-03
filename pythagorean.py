@@ -7,6 +7,8 @@ if sys.version_info[0] == 2:
   range = xrange
 from math import sqrt, ceil
 from collections import deque
+from unitTests import testAssert
+
 
 def isPythagorean(a, b, c):
   # return True if a^2 + b^2 == c^2, False otherwise
@@ -129,20 +131,7 @@ def genPythagoreanWithPerimeter(maxPerimeter=float('inf'), genDerived=True):
       seeds.append((a,b,c, p, k+1))
 
   
-def testAssert(booleanVal, message):
-  # print Assertion message with line info on fail
-  if not booleanVal:
-    import os, sys
-    from traceback import extract_stack
-    callingTracebackStack = extract_stack()[1]
-    callingFile = os.path.relpath(callingTracebackStack[0])
-    callingLine = callingTracebackStack[1]
-    print(' In %s line %d:' % (callingFile, callingLine))
-    sys.tracebacklimit=0
-    raise AssertionError(message)
-
-
-def testPythagorean(maxC=1000):
+def test(maxC=1000):
   ### Test if genPythagorean, genPythagoreanSlow, and isPythagorean work by
   ###   comparing their results
   sys.stdout.write('Testing pythagorean.py...')
@@ -220,4 +209,4 @@ def testPythagorean(maxC=1000):
 
 if __name__ == "__main__":
   args = tuple(eval(a) for a in sys.argv[1:])
-  testPythagorean(*args)
+  test(*args)

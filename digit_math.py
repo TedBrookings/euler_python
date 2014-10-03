@@ -6,6 +6,7 @@ import sys
 if sys.version_info[0] == 2:
   # get rid of 2.x range that produced list instead of iterator
   range = xrange
+from unitTests import testAssert
 
 
 def getDigit(num, n, base=10):
@@ -466,21 +467,6 @@ def genDigitFuncSums(func, minNumDigits=2, base=10, display=False):
     return _genWithZeroDigitFuncSums(fVec, base, display)
 
 
-def testAssert(booleanVal, message):
-  """
-  print Assertion message with line info on fail
-  """
-  if not booleanVal:
-    import os, sys
-    from traceback import extract_stack
-    callingTracebackStack = extract_stack()[-2]
-    callingFile = os.path.relpath(callingTracebackStack[0])
-    callingLine = callingTracebackStack[1]
-    print(' In %s line %d:' % (callingFile, callingLine))
-    sys.tracebacklimit=0
-    raise AssertionError(message)
-
-
 def test_genDigits(largeBase):
   """
   Test genDigits, digitsToInt, getDigit, for 0, and for a very large number
@@ -664,24 +650,3 @@ def test(genTests=[(2,6), (3,6), (4,6), (12,4)], largeBase=20):
 
 if __name__ == "__main__":
   test()
-  sys.exit(0)
-  def _testPalindrome(num, base=10):
-    import sys
-    digits = reversed([d for d in genDigits(num, base)])
-    sys.stdout.write('digits of %d are:' % num)
-    for d in digits:
-      sys.stdout.write(' %d' % d)
-    sys.stdout.write(' --> ')
-    if isPalindrome(num, base):
-      print('%d is a palindrome' % num)
-    else:
-      print('%d is not a palindrome' % num)
-
-  import random
-  random.seed()
-  numDigits = random.randint(4, 7)
-  pVec = [p for p in genNDigitPalindrome(numDigits)]
-  randomP = random.choice(pVec)
-  randomNum = random.randint(10**(numDigits-1), 10**numDigits - 1)
-  _testPalindrome(randomNum)
-  _testPalindrome(randomP)
