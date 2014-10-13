@@ -1,6 +1,4 @@
 Add unit tests for the helper files:
-  fibonacci.py
-  number_words.py
   permutation.py
   primes.py
 Add test.py that calls all unit tests

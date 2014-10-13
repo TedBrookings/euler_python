@@ -3,6 +3,7 @@
 
 import random
 random.seed()
+from unitTests import testAssert
 import sys
 if sys.version_info[0] == 2:
   # get rid of 2.x range that produced list instead of iterator
@@ -67,7 +68,10 @@ def genPermutation(index, numElements=None, elements=None):
 
 
 def genRandomPermutation(numElements=None, elements=None):
-  # Choose a random permutation by choosing lexographical index randomly
+  """
+  Choose a random permutation by choosing lexographical index randomly, then
+  generating the permutation associated with that index
+  """
   if numElements is None:
     if elements is None:
       raise ValueError('Must specify numElements or elements')
@@ -92,9 +96,12 @@ def genRandomPermutation(numElements=None, elements=None):
 
 
 def genRandomPermutationSlow(numElements=None, elements=None):
-  # Choose a random permutation by sequentially choosing members of elements
-  # Mainly here to have a method of randomly-generating permutations without
-  # using lexographical index, thus testing lexographical index-based methods
+  """
+  Choose a random permutation by sequentially choosing members of elements
+  Mainly here to have a method of randomly-generating permutations without
+  using lexographical index, thus being a point of comparison to lexographical
+  index-based methods
+  """
   if numElements is None:
     if elements is None:
       raise ValueError('Must specify numElements or elements')
@@ -112,14 +119,48 @@ def genRandomPermutationSlow(numElements=None, elements=None):
   yield elementsRemaining.pop(0)
 
 
-def testPermute(numPermute=9, permuationNum=4):
-  p = tuple(genRandomPermutationSlow(numPermute))
-  print('Randomly generated permutation p = %s' % str(p))
-  index = getPermutationIndex(p)
-  print('p has lexographical index %d' % index)
-  pRegen = tuple(genPermutation(index, numPermute))
-  print('Permutation generated from this index: %s' % str(pRegen))
+def test(numElements=7):
+  """
+  Run unit test on permutation.py, generating all permutations with specified
+  number of elements and asserting that the chain:
+    p = genPermutation(index)
+    i2 = getPermutationIndex(p)
+  inverts correctly
+  """
+  sys.stdout.write('Print testing permutation.py... ') ; sys.stdout.flush()
+  from math import factorial
+  numPermute = factorial(numElements)
+  elements = list(range(numElements))
+  for index in range(numPermute):
+    p1 = list(genPermutation(index, numElements=numElements))
+    p2 = list(genPermutation(index, elements=elements))
+    testAssert( p1 == p2,
+                "Index=%d generated %s != %s by different methods"
+                % (index, str(p1), str(p2))
+              )
+    i2 = getPermutationIndex(p1)
+    testAssert( i2 == index,
+                "genPermutation(%d) = %s, but getPermutationIndex(%s) = %d"
+                % (index, str(p1), str(p1), i2)
+              )
+  try:
+    p1 = list(genPermutation(numPermute, numElements=numElements))
+    raise AssertionError("Should not be able to generate permutation with "
+                         "index %d" % numPermute)
+  except ValueError as err:
+    if err.message != \
+        "Index greater than number of %d-element permutations" % numElements:
+      raise
+  try:
+    p2 = list(genPermutation(numPermute, elements=elements))
+    raise AssertionError("Should not be able to generate permutation with "
+                         "index %d" % numPermute)
+  except ValueError as err:
+    if err.message != \
+        "Index greater than number of %d-element permutations" % numElements:
+      raise
+  print('passed.')
 
 
 if __name__ == "__main__":
-  testPermute()
+  test()
