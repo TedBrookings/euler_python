@@ -41,7 +41,7 @@ def isEulerFile(f):
   return False
 
 
-def runAllEuler(eulerDir, exeColor='boldYellow', scriptColor='white'):
+def runAllEuler(exeColor='boldYellow', scriptColor='white'):
   for importer, moduleName, ispackage in pkgutil.iter_modules(euler.__path__):
     if not moduleName.startswith('euler'):
       continue
@@ -57,5 +57,4 @@ def runAllEuler(eulerDir, exeColor='boldYellow', scriptColor='white'):
 
 
 if __name__ == "__main__":
-  eulerDir = os.path.dirname(os.path.realpath(__file__))
-  runAllEuler(eulerDir)
+  runAllEuler()
