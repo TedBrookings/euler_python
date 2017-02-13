@@ -7,9 +7,5 @@ Do more problems
 
 Make all euler functions return answer so that verified answers can be used in
   unit tests
-  -Need to rename problem files to start with a letter, since python has
-   trouble importing files whose name starts with a number
   
 Make all problem files use argparse to pass arguments
-
-In the future, always unit tests first

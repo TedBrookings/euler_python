@@ -3,6 +3,8 @@
 
 import os
 import time
+import euler
+import pkgutil
 
 
 _colors = {
@@ -40,18 +42,18 @@ def isEulerFile(f):
 
 
 def runAllEuler(eulerDir, exeColor='boldYellow', scriptColor='white'):
-  dirList = os.listdir(eulerDir)
-  dirList.sort()
-  timeCmd = '/usr/bin/time -f "\tElapsedTime: %U"'
-  for f in dirList:
-    if isEulerFile(f):
-      # execute the script
-      print(_colors[exeColor] + 'executing %s' % f + _colors[scriptColor])
-      os.system(timeCmd + ' ' + os.path.join(eulerDir, f))
-      print(_colors['endColor'])
-      
-
-
+  for importer, moduleName, ispackage in pkgutil.iter_modules(euler.__path__):
+    if not moduleName.startswith('euler'):
+      continue
+    print(_colors[exeColor] + 'executing %s' % moduleName + _colors[scriptColor])
+    funcName = 'euler' + str( int( moduleName[-3:]))
+    module = importer.find_module(moduleName).load_module(moduleName)
+    func = getattr( module, funcName )
+    startTime = time.time()
+    func()
+    endTime = time.time()
+    print( 'Completed in %.1f seconds' % (endTime - startTime) )
+    print(_colors['endColor'])
 
 
 if __name__ == "__main__":
